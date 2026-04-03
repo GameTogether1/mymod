@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>一块游戏MOD库</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <!-- GSAP 动画库 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#0ea5e9',
+                        secondary: '#8b5cf6',
+                        accent: '#f43f5e',
+                        dark: '#0f172a',
+                        'dark-light': '#1e293b',
+                        'neon-blue': '#00f3ff',
+                        'neon-purple': '#bf00ff',
+                        'neon-pink': '#ff00a0'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif']
+                    },
+                    boxShadow: {
+                        'neon-blue': '0 0 5px #00f3ff, 0 0 10px #00f3ff, 0 0 15px #00f3ff',
+                        'neon-purple': '0 0 5px #bf00ff, 0 0 10px #bf00ff, 0 0 15px #bf00ff',
+                        'neon-pink': '0 0 5px #ff00a0, 0 0 10px #ff00a0, 0 0 15px #ff00a0'
+                    },
+                    animation: {
+                        'shake': 'shake 0.5s cubic-bezier(.36,.07,.19,.97) both',
+                        'fade-in': 'fadeIn 0.3s ease-out',
+                        'slide-up': 'slideUp 0.4s ease-out',
+                        'pulse-glow': 'pulseGlow 2s infinite',
+                    },
+                    keyframes: {
+                        shake: {
+                            '10%, 90%': { transform: 'translate3d(-1px, 0, 0)' },
+                            '20%, 80%': { transform: 'translate3d(2px, 0, 0)' },
+                            '30%, 50%, 70%': { transform: 'translate3d(-4px, 0, 0)' },
+                            '40%, 60%': { transform: 'translate3d(4px, 0, 0)' }
+                        },
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' }
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(30px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' }
+                        },
+                        pulseGlow: {
+                            '0%, 100%': { boxShadow: '0 0 5px #00f3ff, 0 0 10px #00f3ff' },
+                            '50%': { boxShadow: '0 0 20px #00f3ff, 0 0 30px #00f3ff' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* ========== 原有基础样式 ========== */
+        .glass-effect {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .input-glow:focus {
+            box-shadow: 0 0 0 2px rgba(0, 243, 255, 0.3), 0 0 20px rgba(0, 243, 255, 0.2);
+        }
+        
+        .input-glow-purple:focus {
+            box-shadow: 0 0 0 2px rgba(191, 0, 255, 0.3), 0 0 20px rgba(191, 0, 255, 0.2);
+        }
+        
+        .tab-active {
+            background: linear-gradient(90deg, #00f3ff, #bf00ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            position: relative;
+        }
+        
+        .tab-active::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, #00f3ff, #bf00ff);
+            box-shadow: 0 0 10px #00f3ff;
+        }
+        
+        .loading-spinner {
+            border: 2px solid rgba(255,255,255,0.1);
+            border-top-color: #00f3ff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .btn-shine {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn-shine::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            transition: left 0.5s;
+        }
+        
+        .btn-shine:hover::before {
+            left: 100%;
+        }
+
+        /* 关闭游戏MOD弹窗专用特效 —— 旋转收缩动画 */
+        .tree-animation {
+            animation: treeShrink 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        @keyframes treeShrink {
+            0% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(0) rotate(180deg);
+                transform-origin: center;
+            }
+        }
+
+        /* ========== 游戏卡片与悬浮标题特效（修改后：标题左下角，封面清晰） ========== */
+        .game-card {
+            transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            position: relative;
+            background: #1e293b;
+            border-radius: 0.75rem;
+        }
+        .game-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.5), 0 0 30px rgba(0, 243, 255, 0.2);
+            border-color: #00f3ff;
+        }
+        
+        .game-card img {
+            width: 100%;
+            display: block;
+            transition: transform 0.3s ease;
+        }
+        .game-card:hover img {
+            transform: scale(1.02);
+        }
+
+        /* 隐藏原始标题 */
+        .game-card .game-title-text {
+            display: none;
+        }
+
+        /* 悬浮覆盖层：左下角显示标题，背景半透明但不模糊，保持封面可见 */
+        .game-card-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.3) 40%, transparent 100%);
+            display: flex;
+            align-items: space-between;      /* 底部对齐 */
+            justify-content: space-between; /* 左对齐 */
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            z-index: 2;
+            border-radius: 0.75rem;
+            padding: 1rem;
+        }
+        .game-card:hover .game-card-overlay {
+            opacity: 1;
+        }
+        .game-card-overlay span {
+            font-size: 1.1rem;
+            font-weight: bold;
+            text-align: left;
+            background: linear-gradient(135deg, #fff, #e2e8f0);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
+            transform: translateY(10px);
+            transition: transform 0.3s ease;
+            max-width: 90%;
+            word-break: break-word;
+            line-height: 1.3;
+        }
+        .game-card:hover .game-card-overlay span {
+            transform: translateY(0);
+        }
+
+        /* MOD卡片悬停特效 */
+        .mod-card {
+            transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .mod-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.5);
+            border-color: #00f3ff;
+            background: rgba(30, 41, 59, 0.9);
+        }
+        .mod-card:hover .mod-title {
+            color: #00f3ff;
+            text-shadow: 0 0 5px #00f3ff;
+        }
+        .mod-title {
+            transition: all 0.2s;
+        }
+
+        /* 字母导航链接悬停特效 */
+        #alphabet-links a {
+            transition: all 0.2s ease;
+            font-weight: 500;
+            position: relative;
+        }
+        #alphabet-links a:hover {
+            color: #00f3ff;
+            text-shadow: 0 0 8px #00f3ff;
+            transform: scale(1.1);
+        }
+        #alphabet-links a.active {
+            background: linear-gradient(90deg, #00f3ff, #bf00ff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-weight: bold;
+        }
+
+        /* 按钮悬停光效增强 */
+        .btn-glow-hover:hover {
+            box-shadow: 0 0 12px currentColor;
+            transition: box-shadow 0.2s;
+        }
+        #browse-games:hover, #hot-mods:hover {
+            transform: translateY(-3px);
+        }
+
+        /* 全局标题悬停特效 */
+        h1, h2, h3, .section-title {
+            transition: text-shadow 0.2s ease, transform 0.2s ease;
+        }
+        h1:hover, .main-title:hover {
+            text-shadow: 0 0 12px rgba(0, 243, 255, 0.6);
+            transform: scale(1.01);
+        }
+        h2:hover {
+            text-shadow: 0 0 10px rgba(191, 0, 255, 0.5);
+        }
+        .text-gradient-neon {
+            transition: all 0.3s;
+        }
+        .text-gradient-neon:hover {
+            letter-spacing: 2px;
+            text-shadow: 0 0 15px #00f3ff, 0 0 25px #bf00ff;
+        }
+
+        /* 搜索框悬停效果 */
+        #search-input:hover, #mobile-search-input:hover {
+            border-color: #00f3ff;
+            box-shadow: 0 0 5px rgba(0, 243, 255, 0.3);
+        }
+
+        /* 页脚文字悬停效果 */
+        footer p:hover {
+            color: #00f3ff;
+            transition: color 0.2s;
+        }
+
+        /* 模态框标题悬停效果 */
+        #modal-game-title:hover, #modal-mod-title:hover {
+            background: linear-gradient(135deg, #00f3ff, #bf00ff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        /* 网盘按钮悬停加强 */
+        #quark-link:hover, #thunder-link:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.1);
+            box-shadow: 0 0 12px rgba(0, 243, 255, 0.4);
+        }
+
+        /* 滚动条美化 */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #00f3ff, #bf00ff);
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="bg-dark text-gray-200 min-h-screen relative overflow-x-hidden">
+    <!-- 背景光晕效果 -->
+    <div class="fixed inset-0 -z-10">
+        <div class="absolute top-0 left-1/4 w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-[128px] opacity-20 animate-pulse"></div>
+        <div class="absolute top-1/3 right-1/4 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-[128px] opacity-20 animate-pulse delay-700"></div>
+        <div class="absolute bottom-0 left-1/3 w-96 h-96 bg-pink-500 rounded-full mix-blend-multiply filter blur-[128px] opacity-20 animate-pulse delay-1000"></div>
+    </div>
+
+    <!-- 顶部导航栏 -->
+    <header class="bg-dark-light bg-opacity-80 backdrop-blur-md border-b border-gray-800 py-4 px-6 sticky top-0 z-50">
+        <div class="container mx-auto flex justify-between items-center">
+            <div class="flex items-center">
+                <h1 class="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 cursor-pointer transition-all main-title">
+                    一块游戏MOD库
+                </h1>
+            </div>
+            <!-- 搜索栏（PC端） -->
+            <div class="hidden md:flex items-center flex-1 max-w-md mx-8">
+                <div class="relative w-full">
+                    <input type="text" id="search-input" placeholder="搜索游戏名..." class="w-full py-2 px-4 pr-10 rounded-full bg-dark border border-gray-700 focus:outline-none focus:border-neon-blue focus:ring-2 focus:ring-neon-blue/30 transition-all">
+                    <button class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-neon-blue transition-colors">
+                        <i class="fa fa-search"></i>
+                    </button>
+                </div>
+            </div>
+            <!-- 登录按钮/用户信息 -->
+            <div class="flex items-center" id="auth-section">
+                <button id="login-btn" class="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium py-2 px-6 rounded-full transition-all hover:shadow-neon-blue flex items-center btn-shine">
+                    <i class="fa fa-user-circle mr-2"></i> 登录
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 网站介绍 -->
+    <section class="py-12 px-4 bg-gradient-to-b from-dark-light to-dark">
+        <div class="container mx-auto text-center">
+            <h2 class="text-4xl md:text-5xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-neon-blue to-neon-purple text-gradient-neon cursor-pointer">
+                游戏MOD资源库
+            </h2>
+            <p class="text-xl text-gray-300 max-w-3xl mx-auto mb-8">
+                发现、下载和分享你喜爱游戏的最佳MOD。我们提供海量精选MOD资源，让你的游戏体验更加丰富多彩。
+            </p>
+            <div class="flex flex-wrap justify-center gap-4">
+                <a href="#" id="browse-games" class="bg-dark-light hover:bg-dark-light/80 border border-gray-700 hover:border-neon-blue hover:shadow-neon-blue text-white font-medium py-3 px-6 rounded-lg transition-all flex items-center btn-glow-hover">
+                    <i class="fa fa-gamepad mr-2"></i> 热门MOD
+                </a>
+                <a href="#" id="hot-mods" class="bg-dark-light hover:bg-dark-light/80 border border-gray-700 hover:border-neon-purple hover:shadow-neon-purple text-white font-medium py-3 px-6 rounded-lg transition-all flex items-center btn-glow-hover">
+                    <i class="fa fa-star mr-2"></i> 浏览游戏
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- 游戏MOD库 -->
+    <section class="py-12 px-4">
+        <div class="container mx-auto">
+            <h2 class="text-3xl font-bold mb-8 text-center section-title cursor-pointer">游戏MOD库</h2>
+            <p class="text-gray-400 text-center mb-10 max-w-2xl mx-auto">
+                按游戏名称首字母拼音排序，轻松找到你想要的游戏MOD资源。点击字母导航快速跳转到对应区域。
+            </p>
+            <!-- 移动端搜索栏 -->
+            <div class="md:hidden mb-8">
+                <div class="relative w-full max-w-md mx-auto">
+                    <input type="text" id="mobile-search-input" placeholder="搜索游戏名..." class="w-full py-2 px-4 pr-10 rounded-full bg-dark border border-gray-700 focus:outline-none focus:border-neon-blue focus:ring-2 focus:ring-neon-blue/30 transition-all">
+                    <button class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-neon-blue transition-colors">
+                        <i class="fa fa-search"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 字母导航（动态生成） -->
+    <nav class="alphabet-nav border-b border-gray-800 py-3 px-4" id="alphabet-nav">
+        <div class="container mx-auto flex flex-wrap justify-center gap-2 md:gap-4" id="alphabet-links">
+            <!-- 动态生成字母链接 -->
+        </div>
+    </nav>
+
+    <!-- 主要内容区域：游戏卡片动态加载 -->
+    <main class="container mx-auto py-8 px-4" id="games-container"></main>
+
+    <!-- 页脚 -->
+    <footer class="bg-dark-light py-6 border-t border-gray-800">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-gray-400 transition-all cursor-default">© 2025 游戏MOD下载网站 | 所有MOD资源均来自网络，仅供学习交流使用</p>
+        </div>
+    </footer>
+
+    <!-- 游戏MOD浮窗 -->
+    <div id="game-mod-modal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black bg-opacity-70 backdrop-blur-sm"></div>
+        <div class="absolute inset-0 flex items-center justify-center p-4">
+            <div class="bg-dark-light rounded-lg border border-gray-700 w-full max-w-6xl max-h-[90vh] overflow-hidden modal-animation-enter">
+                <div class="flex justify-between items-center p-4 border-b border-gray-700">
+                    <h3 id="modal-game-title" class="text-2xl font-bold text-white cursor-pointer transition-all"></h3>
+                    <button id="close-mod-modal" class="text-gray-400 hover:text-white transition-colors">
+                        <i class="fa fa-times text-xl"></i>
+                    </button>
+                </div>
+                <div class="p-4">
+                    <div id="mods-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                        <!-- MOD卡片将通过JavaScript动态生成 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MOD详情浮窗 -->
+    <div id="mod-detail-modal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black bg-opacity-70 backdrop-blur-sm"></div>
+        <div class="absolute inset-0 flex items-center justify-center p-4">
+            <div class="bg-dark-light rounded-lg border border-gray-700 w-full max-w-4xl max-h-[95vh] overflow-hidden modal-animation-enter">
+                <div class="flex justify-between items-center p-4 border-b border-gray-700">
+                    <h3 id="modal-mod-title" class="text-2xl font-bold text-white cursor-pointer transition-all"></h3>
+                    <button id="close-detail-modal" class="text-gray-400 hover:text-white transition-colors">
+                        <i class="fa fa-times text-xl"></i>
+                    </button>
+                </div>
+                <div class="p-4">
+                    <div class="relative mb-4 rounded-lg overflow-hidden">
+                        <div id="image-slider" class="relative h-48 md:h-60">
+                            <img id="current-image" src="" alt="MOD预览图" class="w-full h-full object-cover">
+                            <button id="prev-image" class="absolute left-4 top-1/2 transform -translate-y-1/2 w-12 h-12 rounded-full bg-black bg-opacity-50 text-white flex items-center justify-center hover:bg-opacity-70 transition-all">
+                                <i class="fa fa-angle-left text-2xl"></i>
+                            </button>
+                            <button id="next-image" class="absolute right-4 top-1/2 transform -translate-y-1/2 w-12 h-12 rounded-full bg-black bg-opacity-50 text-white flex items-center justify-center hover:bg-opacity-70 transition-all">
+                                <i class="fa fa-angle-right text-2xl"></i>
+                            </button>
+                            <div id="image-indicators" class="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2"></div>
+                        </div>
+                    </div>
+                    <div id="mod-detail-content" class="space-y-4"></div>
+                    <div class="mt-6 flex justify-center gap-4">
+                        <a href="#" id="quark-link" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all flex items-center">
+                            <i class="fa fa-cloud-download mr-2"></i> 夸克网盘
+                        </a>
+                        <a href="#" id="thunder-link" class="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-all flex items-center">
+                            <i class="fa fa-bolt mr-2"></i> 迅雷网盘
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 登录/注册弹窗 -->
+    <div id="auth-modal" class="fixed inset-0 z-[60] hidden">
+        <div class="absolute inset-0 bg-black/80 backdrop-blur-sm transition-opacity opacity-0" id="auth-backdrop"></div>
+        <div class="absolute inset-0 flex items-center justify-center p-4">
+            <div class="glass-effect rounded-2xl w-full max-w-md transform scale-95 opacity-0 transition-all duration-300" id="auth-modal-content">
+                <button id="close-auth-modal" class="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors z-10">
+                    <i class="fa fa-times text-xl"></i>
+                </button>
+                
+                <div class="p-6 pb-0">
+                    <div class="text-center mb-6">
+                        <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-neon-blue to-neon-purple flex items-center justify-center shadow-neon-blue animate-pulse-glow">
+                            <i class="fa fa-gamepad text-2xl text-white"></i>
+                        </div>
+                        <h2 class="text-2xl font-bold text-white mb-1">游戏MOD库</h2>
+                        <p class="text-gray-400 text-sm">登录以享受更多功能</p>
+                    </div>
+                    
+                    <div class="flex border-b border-gray-700 mb-6">
+                        <button id="tab-login" class="flex-1 pb-3 text-center font-medium transition-all tab-active">
+                            登录
+                        </button>
+                        <button id="tab-register" class="flex-1 pb-3 text-center font-medium text-gray-400 hover:text-white transition-all">
+                            注册
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- 登录表单 -->
+                <div id="login-form" class="p-6 pt-0 animate-slide-up">
+                    <form id="login-form-element" class="space-y-4">
+                        <div class="relative group">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fa fa-envelope text-gray-500 group-focus-within:text-neon-blue transition-colors"></i>
+                            </div>
+                            <input type="email" id="login-email" required 
+                                class="w-full pl-10 pr-4 py-3 rounded-xl bg-dark/50 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-neon-blue input-glow transition-all"
+                                placeholder="请输入邮箱">
+                        </div>
+                        
+                        <div class="relative group">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fa fa-lock text-gray-500 group-focus-within:text-neon-blue transition-colors"></i>
+                            </div>
+                            <input type="password" id="login-password" required 
+                                class="w-full pl-10 pr-12 py-3 rounded-xl bg-dark/50 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-neon-blue input-glow transition-all"
+                                placeholder="请输入密码">
+                            <button type="button" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-white toggle-password" data-target="login-password">
+                                <i class="fa fa-eye"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="flex items-center justify-between text-sm">
+                            <label class="flex items-center text-gray-400 cursor-pointer hover:text-white transition-colors">
+                                <input type="checkbox" class="mr-2 rounded bg-dark border-gray-700 text-neon-blue focus:ring-neon-blue">
+                                记住我
+                            </label>
+                            <a href="#" class="text-neon-blue hover:text-neon-purple transition-colors">忘记密码？</a>
+                        </div>
+                        
+                        <button type="submit" id="login-submit" 
+                            class="w-full py-3 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold transition-all hover:shadow-neon-blue btn-shine flex items-center justify-center gap-2">
+                            <span>立即登录</span>
+                            <div class="loading-spinner w-5 h-5 hidden" id="login-loading"></div>
+                        </button>
+                    </form>
+                </div>
+                
+                <!-- 注册表单 -->
+                <div id="register-form" class="p-6 pt-0 hidden animate-slide-up">
+                    <form id="register-form-element" class="space-y-4">
+                        <div class="relative group">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fa fa-envelope text-gray-500 group-focus-within:text-neon-purple transition-colors"></i>
+                            </div>
+                            <input type="email" id="register-email" required 
+                                class="w-full pl-10 pr-4 py-3 rounded-xl bg-dark/50 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-neon-purple input-glow-purple transition-all"
+                                placeholder="请输入邮箱">
+                        </div>
+                        
+                        <div class="relative group">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fa fa-lock text-gray-500 group-focus-within:text-neon-purple transition-colors"></i>
+                            </div>
+                            <input type="password" id="register-password" required minlength="6"
+                                class="w-full pl-10 pr-12 py-3 rounded-xl bg-dark/50 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-neon-purple input-glow-purple transition-all"
+                                placeholder="请输入密码（至少6位）">
+                            <button type="button" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-white toggle-password" data-target="register-password">
+                                <i class="fa fa-eye"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="relative group">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fa fa-lock text-gray-500 group-focus-within:text-neon-purple transition-colors"></i>
+                            </div>
+                            <input type="password" id="register-confirm-password" required 
+                                class="w-full pl-10 pr-4 py-3 rounded-xl bg-dark/50 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-neon-purple input-glow-purple transition-all"
+                                placeholder="请确认密码">
+                        </div>
+                        
+                        <button type="submit" id="register-submit" 
+                            class="w-full py-3 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold transition-all hover:shadow-neon-purple btn-shine flex items-center justify-center gap-2">
+                            <span>立即注册</span>
+                            <div class="loading-spinner w-5 h-5 hidden" id="register-loading"></div>
+                        </button>
+                    </form>
+                    
+                    <div class="mt-4 text-center">
+                        <p class="text-gray-500 text-xs">
+                            注册即表示您同意我们的服务条款和隐私政策
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="p-6 pt-0 text-center border-t border-gray-800 mt-4">
+                    <p class="text-gray-400 text-sm" id="form-toggle-text">
+                        还没有账号？ <button type="button" id="show-register" class="text-neon-blue hover:text-neon-purple font-medium transition-colors">立即注册</button>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 修改密码弹窗 -->
+    <div id="change-password-modal" class="fixed inset-0 z-[60] hidden">
+        <div class="absolute inset-0 bg-black/80 backdrop-blur-sm transition-opacity opacity-0" id="password-backdrop"></div>
+        <div class="absolute inset-0 flex items-center justify-center p-4">
+            <div class="glass-effect rounded-2xl w-full max-w-md transform scale-95 opacity-0 transition-all duration-300" id="password-modal-content">
+                <button id="close-password-modal" class="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors z-10">
+                    <i class="fa fa-times text-xl"></i>
+                </button>
+                
+                <div class="p-6">
+                    <div class="text-center mb-6">
+                        <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-neon-purple to-neon-pink flex items-center justify-center shadow-neon-purple animate-pulse-glow">
+                            <i class="fa fa-lock text-2xl text-white"></i>
+                        </div>
+                        <h2 class="text-2xl font-bold text-white mb-1">修改密码</h2>
+                        <p class="text-gray-400 text-sm">请输入当前密码和新密码</p>
+                    </div>
+                    
+                    <form id="change-password-form" class="space-y-4">
+                        <div class="relative group">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fa fa-lock text-gray-500 group-focus-within:text-neon-purple transition-colors"></i>
+                            </div>
+                            <input type="password" id="current-password" required 
+                                class="w-full pl-10 pr-12 py-3 rounded-xl bg-dark/50 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-neon-purple input-glow-purple transition-all"
+                                placeholder="当前密码">
+                            <button type="button" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-white toggle-password" data-target="current-password">
+                                <i class="fa fa-eye"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="relative group">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fa fa-lock text-gray-500 group-focus-within:text-neon-purple transition-colors"></i>
+                            </div>
+                            <input type="password" id="new-password" required minlength="6"
+                                class="w-full pl-10 pr-12 py-3 rounded-xl bg-dark/50 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-neon-purple input-glow-purple transition-all"
+                                placeholder="新密码（至少6位）">
+                            <button type="button" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-white toggle-password" data-target="new-password">
+                                <i class="fa fa-eye"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="relative group">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fa fa-lock text-gray-500 group-focus-within:text-neon-purple transition-colors"></i>
+                            </div>
+                            <input type="password" id="confirm-new-password" required 
+                                class="w-full pl-10 pr-4 py-3 rounded-xl bg-dark/50 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-neon-purple input-glow-purple transition-all"
+                                placeholder="确认新密码">
+                        </div>
+                        
+                        <button type="submit" id="change-password-submit" 
+                            class="w-full py-3 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold transition-all hover:shadow-neon-purple btn-shine flex items-center justify-center gap-2 mt-6">
+                            <span>确认修改</span>
+                            <div class="loading-spinner w-5 h-5 hidden" id="password-loading"></div>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 提示消息容器 -->
+    <div id="toast-container" class="fixed top-20 right-4 z-[70] space-y-2"></div>
+
+    <!-- 引入JS模块 -->
+    <script src="js/main.js"></script>
+    <script src="js/search.js"></script>
+    <script src="js/auth.js"></script>
+
+    <!-- 游戏MOD弹窗关闭旋转收缩特效 + 游戏卡片悬浮标题特效（左下角，封面清晰） -->
+    <script>
+        (function() {
+            // ========= 关闭弹窗旋转收缩特效 =========
+            function initCloseEffect() {
+                const modal = document.getElementById('game-mod-modal');
+                if (!modal) return;
+
+                const modalContent = modal.querySelector('.bg-dark-light.rounded-lg');
+                if (!modalContent) return;
+
+                const oldCloseBtn = document.getElementById('close-mod-modal');
+                if (!oldCloseBtn) return;
+
+                const newCloseBtn = oldCloseBtn.cloneNode(true);
+                newCloseBtn.id = 'close-mod-modal';
+                oldCloseBtn.parentNode.replaceChild(newCloseBtn, oldCloseBtn);
+
+                let isAnimating = false;
+                let animationEndHandler = null;
+
+                const closeWithAnimation = () => {
+                    if (isAnimating) return;
+                    if (modal.classList.contains('hidden')) return;
+
+                    isAnimating = true;
+                    modalContent.classList.remove('tree-animation');
+                    void modalContent.offsetWidth;
+                    modalContent.classList.add('tree-animation');
+
+                    const onAnimationEnd = () => {
+                        modal.classList.add('hidden');
+                        modalContent.classList.remove('tree-animation');
+                        if (animationEndHandler) {
+                            modalContent.removeEventListener('animationend', animationEndHandler);
+                            animationEndHandler = null;
+                        }
+                        isAnimating = false;
+                    };
+
+                    animationEndHandler = onAnimationEnd;
+                    modalContent.addEventListener('animationend', animationEndHandler, { once: true });
+                    
+                    setTimeout(() => {
+                        if (isAnimating === true) {
+                            if (animationEndHandler) {
+                                modalContent.removeEventListener('animationend', animationEndHandler);
+                                animationEndHandler = null;
+                            }
+                            modal.classList.add('hidden');
+                            modalContent.classList.remove('tree-animation');
+                            isAnimating = false;
+                        }
+                    }, 550);
+                };
+
+                newCloseBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    closeWithAnimation();
+                });
+
+                const observer = new MutationObserver((mutations) => {
+                    mutations.forEach((mutation) => {
+                        if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                            if (!modal.classList.contains('hidden')) {
+                                if (modalContent.classList.contains('tree-animation')) {
+                                    modalContent.classList.remove('tree-animation');
+                                }
+                                isAnimating = false;
+                            }
+                        }
+                    });
+                });
+                observer.observe(modal, { attributes: true });
+            }
+
+            // ========= 游戏封面悬浮显示标题特效（左下角，封面不模糊） =========
+            function addGameCardOverlay() {
+                const gamesContainer = document.getElementById('games-container');
+                if (!gamesContainer) return;
+
+                const observer = new MutationObserver(function(mutations) {
+                    mutations.forEach(function(mutation) {
+                        if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+                            processGameCards();
+                        }
+                    });
+                });
+                observer.observe(gamesContainer, { childList: true, subtree: true });
+                processGameCards();
+
+                function processGameCards() {
+                    const cards = document.querySelectorAll('#games-container .game-card');
+                    cards.forEach(card => {
+                        if (card.querySelector('.game-card-overlay')) return;
+                        
+                        let titleElem = card.querySelector('h3, .game-title, .card-title');
+                        let gameTitle = '';
+                        if (titleElem) {
+                            gameTitle = titleElem.innerText.trim();
+                            titleElem.style.display = 'none';
+                            titleElem.classList.add('game-title-text');
+                        } else {
+                            gameTitle = card.getAttribute('data-title') || '未知游戏';
+                        }
+                        
+                        const overlay = document.createElement('div');
+                        overlay.className = 'game-card-overlay';
+                        const titleSpan = document.createElement('span');
+                        titleSpan.innerText = gameTitle;
+                        overlay.appendChild(titleSpan);
+                        card.style.position = 'relative';
+                        card.appendChild(overlay);
+                    });
+                }
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', () => {
+                    initCloseEffect();
+                    addGameCardOverlay();
+                });
+            } else {
+                initCloseEffect();
+                addGameCardOverlay();
+            }
+        })();
+    </script>
+</body>
+</html>

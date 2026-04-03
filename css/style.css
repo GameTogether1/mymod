@@ -1,0 +1,112 @@
+/* Tailwind 自定义样式扩展 */
+@layer utilities {
+    .text-shadow-neon {
+        text-shadow: 0 0 5px currentColor, 0 0 10px currentColor;
+    }
+    .border-glow {
+        box-shadow: 0 0 5px currentColor, 0 0 10px currentColor;
+    }
+    .bg-glass {
+        background: rgba(15, 23, 42, 0.7);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+    }
+    .card-hover {
+        transition: all 0.3s ease;
+    }
+    .card-hover:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+    }
+    .modal-animation-enter {
+        animation: modalFadeIn 0.3s ease-out forwards;
+    }
+    .modal-animation-exit {
+        animation: modalFadeOut 0.3s ease-in forwards;
+    }
+    .tree-animation {
+        animation: treeShrink 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }
+}
+
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes modalFadeOut {
+    from {
+        opacity: 1;
+        transform: scale(1);
+    }
+    to {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+}
+
+@keyframes treeShrink {
+    0% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: scale(0) rotate(180deg);
+        transform-origin: center;
+    }
+}
+
+.alphabet-nav {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(15, 23, 42, 0.9);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.game-card {
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.game-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0 15px rgba(0, 243, 255, 0.5), 0 0 30px rgba(0, 243, 255, 0.2);
+    border-color: #00f3ff;
+}
+
+.game-card:hover .game-card-overlay {
+    opacity: 1;
+}
+
+.game-card-overlay {
+    opacity: 0;
+    transition: all 0.3s ease;
+    background: linear-gradient(to top, rgba(15, 23, 42, 0.9) 0%, rgba(15, 23, 42, 0) 100%);
+}
+
+.mod-card {
+    transition: all 0.3s ease;
+}
+
+.mod-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0 15px rgba(0, 243, 255, 0.5);
+}
+
+.scrollbar-hidden::-webkit-scrollbar {
+    display: none;
+}
+
+.scrollbar-hidden {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
