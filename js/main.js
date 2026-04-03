@@ -68,7 +68,7 @@ function renderGames(groups) {
             <section id="section-${letter}" class="mb-16">
                 <h2 class="text-3xl font-bold mb-6 text-neon-blue text-shadow-neon flex items-center">
                     <span class="w-10 h-10 rounded-full bg-dark-light flex items-center justify-center mr-3">${letter}</span>
-                    ${letter}
+                    
                 </h2>
                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         `;
