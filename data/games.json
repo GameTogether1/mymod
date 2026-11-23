@@ -1,14 +1,20 @@
 [
+   {
+        "id": "elden-ring",
+        "title": "艾尔登法环",
+        "image": "https://pic.imgdb.cn/item/672f73d4d29ded1a8ca504d4.jpg",
+        "letter": "A"
+    },
     {
         "id": "resident-evil-2",
         "title": "生化危机2",
-        "image": "https://p11-doubao-search-sign.byteimg.com/pgc-image/1532138052481de145d8d60~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1790419649&x-signature=TyfbXgQb%2B41aAp3wF550TH9roAE%3D",
+        "image": "https://pic.imgdb.cn/item/672f74edd29ded1a8ca602cc.jpg",
         "letter": "S"
     },
     {
         "id": "resident-evil-4",
         "title": "生化危机4",
-        "image": "https://p11-doubao-search-sign.byteimg.com/labis/f745e742d03da4a326b97bf1d1066df8~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1790419649&x-signature=b5vPU986j527f6lJLNWuL0Qm7eg%3D",
+        "image": "https://pic.imgdb.cn/item/672f74f6d29ded1a8ca60b28.jpg",
         "letter": "S"
     },
     {
@@ -18,9 +24,21 @@
         "letter": "W"
     },
     {
-        "id": "skyrim",
-        "title": "上古卷轴5：天际",
-        "image": "https://p26-doubao-search-sign.byteimg.com/labis/58720c3010620273e14b9f3131fb6ce2~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1790419649&x-signature=ErpkWgeST%2F3lWPfAAw0NAQYjzGI%3D",
+        "id": "resident-evil-3",
+        "title": "生化危机3",
+        "image": "https://pic.imgdb.cn/item/672f74f6d29ded1a8ca60ac1.jpg",
+        "letter": "S"
+    },
+    {
+        "id": "resident-evil-8",
+        "title": "生化危机8",
+        "image": "https://pic.imgdb.cn/item/672f74f7d29ded1a8ca60be1.jpg",
+        "letter": "S"
+    },
+    {
+        "id": "resident-evil-9",
+        "title": "生化危机9",
+        "image": "https://pic1.imgdb.cn/item/699fea30569239540e67517f.jpg",
         "letter": "S"
     }
 
