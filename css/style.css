@@ -1,42 +1,42 @@
-/* Tailwind 自定义样式扩展 */
+/* Tailwind 自定义样式扩展 + ModTogether（一块Mod）嵌入美化 */
 @layer utilities {
     .text-shadow-neon {
-        text-shadow: 0 0 5px currentColor, 0 0 10px currentColor;
+        text-shadow: 0 0 6px currentColor, 0 0 14px currentColor;
     }
     .border-glow {
-        box-shadow: 0 0 5px currentColor, 0 0 10px currentColor;
+        box-shadow: 0 0 6px currentColor, 0 0 14px currentColor;
     }
     .bg-glass {
-        background: rgba(15, 23, 42, 0.7);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
+        background: rgba(15, 23, 42, 0.75);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
     }
     .card-hover {
-        transition: all 0.3s ease;
+        transition: all 0.28s cubic-bezier(0.22, 1, 0.36, 1);
     }
     .card-hover:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+        transform: translateY(-4px);
+        box-shadow: 0 14px 30px -8px rgba(0, 0, 0, 0.45);
     }
     .modal-animation-enter {
-        animation: modalFadeIn 0.3s ease-out forwards;
+        animation: modalFadeIn 0.25s cubic-bezier(0.22, 1, 0.36, 1) forwards;
     }
     .modal-animation-exit {
-        animation: modalFadeOut 0.3s ease-in forwards;
+        animation: modalFadeOut 0.2s ease-in forwards;
     }
     .tree-animation {
-        animation: treeShrink 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        animation: modalFadeOut 0.2s ease-in forwards;
     }
 }
 
 @keyframes modalFadeIn {
     from {
         opacity: 0;
-        transform: scale(0.95);
+        transform: scale(0.96) translateY(8px);
     }
     to {
         opacity: 1;
-        transform: scale(1);
+        transform: scale(1) translateY(0);
     }
 }
 
@@ -47,59 +47,70 @@
     }
     to {
         opacity: 0;
-        transform: scale(0.95);
+        transform: scale(0.96);
     }
 }
 
-@keyframes treeShrink {
-    0% {
-        opacity: 1;
-        transform: scale(1);
-    }
-    100% {
-        opacity: 0;
-        transform: scale(0) rotate(180deg);
-        transform-origin: center;
-    }
+/* 嵌入到 ModTogether（一块Mod）客户端时的清爽模式（保留顶部搜索与登录栏） */
+body.modtogether-embed footer,
+body.modtogether-embed #hero-section,
+body.modtogether-embed section.py-12.bg-gradient-to-b {
+    display: none !important;
+}
+
+body.modtogether-embed {
+    background: #09090b !important;
+}
+
+body.modtogether-embed main {
+    padding-top: 1rem !important;
 }
 
 .alphabet-nav {
     position: sticky;
     top: 0;
-    z-index: 50;
-    background: rgba(15, 23, 42, 0.9);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    z-index: 40;
+    background: rgba(9, 9, 11, 0.88);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .game-card {
-    transition: all 0.3s ease;
+    transition: all 0.28s cubic-bezier(0.22, 1, 0.36, 1);
     overflow: hidden;
+    border-radius: 0.875rem;
+    background: #18181b;
+    border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .game-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 0 15px rgba(0, 243, 255, 0.5), 0 0 30px rgba(0, 243, 255, 0.2);
-    border-color: #00f3ff;
-}
-
-.game-card:hover .game-card-overlay {
-    opacity: 1;
+    transform: translateY(-4px);
+    box-shadow: 0 12px 28px -8px rgba(0, 243, 255, 0.28);
+    border-color: rgba(0, 243, 255, 0.65);
 }
 
 .game-card-overlay {
-    opacity: 0;
-    transition: all 0.3s ease;
-    background: linear-gradient(to top, rgba(15, 23, 42, 0.9) 0%, rgba(15, 23, 42, 0) 100%);
+    opacity: 1 !important;
+    background: linear-gradient(to top, rgba(9, 9, 11, 0.92) 0%, rgba(9, 9, 11, 0.35) 55%, transparent 100%) !important;
+    transition: background 0.25s ease;
+}
+
+.game-card:hover .game-card-overlay {
+    background: linear-gradient(to top, rgba(9, 9, 11, 0.96) 0%, rgba(9, 9, 11, 0.45) 60%, transparent 100%) !important;
 }
 
 .mod-card {
-    transition: all 0.3s ease;
+    transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+    border-radius: 0.75rem;
+    background: #18181b;
+    border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .mod-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 0 15px rgba(0, 243, 255, 0.5);
+    transform: translateY(-4px);
+    box-shadow: 0 10px 24px -6px rgba(0, 243, 255, 0.28);
+    border-color: rgba(0, 243, 255, 0.65);
 }
 
 .scrollbar-hidden::-webkit-scrollbar {
