@@ -1116,6 +1116,15 @@ window.handleDownloadClick = function(url, type) {
         return false;
     }
     
+    if (type === 'quark' && typeof window.openQuarkQrModal === 'function') {
+        window.openQuarkQrModal(url);
+        return true;
+    }
+    if (type === 'thunder' && typeof window.copyThunderLink === 'function') {
+        window.copyThunderLink(url);
+        return true;
+    }
+    
     window.open(url, '_blank');
     return true;
 };
