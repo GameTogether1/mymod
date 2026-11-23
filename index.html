@@ -416,14 +416,14 @@
     <div id="game-mod-modal" class="fixed inset-0 z-50 hidden">
         <div class="absolute inset-0 bg-black bg-opacity-70 backdrop-blur-sm"></div>
         <div class="absolute inset-0 flex items-center justify-center p-4">
-            <div class="bg-dark-light rounded-lg border border-gray-700 w-full max-w-6xl max-h-[90vh] overflow-hidden modal-animation-enter">
-                <div class="flex justify-between items-center p-4 border-b border-gray-700">
+            <div class="bg-dark-light rounded-lg border border-gray-700 w-full max-w-6xl max-h-[90vh] flex flex-col overflow-hidden modal-animation-enter">
+                <div class="flex justify-between items-center p-4 border-b border-gray-700 shrink-0">
                     <h3 id="modal-game-title" class="text-2xl font-bold text-white cursor-pointer transition-all"></h3>
                     <button id="close-mod-modal" class="text-gray-400 hover:text-white transition-colors">
                         <i class="fa fa-times text-xl"></i>
                     </button>
                 </div>
-                <div class="p-4">
+                <div class="p-4 overflow-y-auto flex-1">
                     <div id="mods-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
                         <!-- MOD卡片将通过JavaScript动态生成 -->
                     </div>
@@ -436,7 +436,7 @@
     <div id="mod-detail-modal" class="fixed inset-0 z-50 hidden">
         <div class="absolute inset-0 bg-black bg-opacity-70 backdrop-blur-sm"></div>
         <div class="absolute inset-0 flex items-center justify-center p-4">
-            <div class="bg-dark-light rounded-lg border border-gray-700 w-full max-w-4xl max-h-[95vh] overflow-hidden modal-animation-enter">
+            <div class="bg-dark-light rounded-lg border border-gray-700 w-full max-w-4xl max-h-[95vh] overflow-y-auto modal-animation-enter">
                 <div class="flex justify-between items-center p-4 border-b border-gray-700">
                     <h3 id="modal-mod-title" class="text-2xl font-bold text-white cursor-pointer transition-all"></h3>
                     <button id="close-detail-modal" class="text-gray-400 hover:text-white transition-colors">
@@ -445,24 +445,29 @@
                 </div>
                 <div class="p-4">
                     <div class="relative mb-4 rounded-lg overflow-hidden">
-                        <div id="image-slider" class="relative h-48 md:h-60">
-                            <img id="current-image" src="" alt="MOD预览图" class="w-full h-full object-cover">
-                            <button id="prev-image" class="absolute left-4 top-1/2 transform -translate-y-1/2 w-12 h-12 rounded-full bg-black bg-opacity-50 text-white flex items-center justify-center hover:bg-opacity-70 transition-all">
-                                <i class="fa fa-angle-left text-2xl"></i>
-                            </button>
-                            <button id="next-image" class="absolute right-4 top-1/2 transform -translate-y-1/2 w-12 h-12 rounded-full bg-black bg-opacity-50 text-white flex items-center justify-center hover:bg-opacity-70 transition-all">
-                                <i class="fa fa-angle-right text-2xl"></i>
-                            </button>
-                            <div id="image-indicators" class="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2"></div>
-                        </div>
+                        <div id="image-slider" class="relative w-full bg-black/40 flex justify-center items-center rounded-lg overflow-hidden min-h-[240px]">
+    <img id="current-image" src="" alt="MOD预览图" class="max-w-full max-h-[60vh] object-contain" style="max-height: 60vh;">
+    <!-- 左右箭头添加 z-10 确保可点击 -->
+    <button id="prev-image" class="absolute left-4 top-1/2 transform -translate-y-1/2 w-12 h-12 rounded-full bg-black bg-opacity-50 text-white flex items-center justify-center hover:bg-opacity-70 transition-all z-10">
+        <i class="fa fa-angle-left text-2xl"></i>
+    </button>
+    <button id="next-image" class="absolute right-4 top-1/2 transform -translate-y-1/2 w-12 h-12 rounded-full bg-black bg-opacity-50 text-white flex items-center justify-center hover:bg-opacity-70 transition-all z-10">
+        <i class="fa fa-angle-right text-2xl"></i>
+    </button>
+    <div id="image-indicators" class="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2 z-10"></div>
+</div>
                     </div>
                     <div id="mod-detail-content" class="space-y-4"></div>
-                    <div class="mt-6 flex justify-center gap-4">
-                        <a href="#" id="quark-link" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all flex items-center">
-                            <i class="fa fa-cloud-download mr-2"></i> 夸克网盘
+                    <div class="mt-6 flex flex-wrap justify-center gap-3">
+                        <button type="button" id="modtogether-import-btn" class="hidden px-6 py-2.5 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white font-semibold rounded-xl shadow-lg transition-all flex items-center gap-2 cursor-pointer">
+                            <i class="fa fa-download"></i>
+                            <span id="modtogether-import-label">一键下载并导入到 一块Mod</span>
+                        </button>
+                        <a href="#" id="quark-link" target="_blank" rel="noopener noreferrer" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-all flex items-center gap-2">
+                            <i class="fa fa-cloud-download"></i> 夸克网盘
                         </a>
-                        <a href="#" id="thunder-link" class="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-all flex items-center">
-                            <i class="fa fa-bolt mr-2"></i> 迅雷网盘
+                        <a href="#" id="thunder-link" target="_blank" rel="noopener noreferrer" class="px-6 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl transition-all flex items-center gap-2">
+                            <i class="fa fa-bolt"></i> 迅雷网盘
                         </a>
                     </div>
                 </div>
